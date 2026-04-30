@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Hospital Command Center | Oncology + Patient Intake</title>
+  <!-- Google Fonts Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #eef2f9;
+      font-family: 'Inter', sans-serif;
+      padding: 1.5rem;
+      min-height: 100vh;
+    }
+
+    /* main layout grid */
+    .dashboard-grid {
+      max-width: 1600px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 0.9fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    /* left column: chart & insights */
+    .left-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* right panel: patient data input + recent list */
+    .right-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* universal card style */
+    .card {
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(0px);
+      border-radius: 1.5rem;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(166, 188, 210, 0.35);
+      transition: all 0.2s;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 1.2rem 1.5rem 0.5rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      border-bottom: 1px solid rgba(110, 130, 160, 0.15);
+    }
+
+    .card-header h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1f2e45;
+      letter-spacing: -0.2px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card-header h2 i {
+      color: #2c7da0;
+      font-size: 1.2rem;
+    }
+
+    .badge-subtle {
+      background: #eef2ff;
+      padding: 0.2rem 0.7rem;
+      border-radius: 30px;
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: #2c5f8a;
+    }
+
+    .chart-container {
+      padding: 0.8rem 1rem 1rem 1rem;
+    }
+
+    /* form styles */
+    .patient-form {
+      padding: 1.2rem 1.5rem 1.5rem 1.5rem;
+    }
+
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .form-group {
+      flex: 1;
+      min-width: 140px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      color: #5c7292;
+      margin-bottom: 0.3rem;
+    }
+
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 0.7rem 0.8rem;
+      border-radius: 12px;
+      border: 1px solid #cfdfed;
+      background: #ffffff;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #1a2c3e;
+      transition: 0.15s;
+    }
+
+    .form-group input:focus, .form-group select:focus {
+      outline: none;
+      border-color: #2c7da0;
+      box-shadow: 0 0 0 3px rgba(44,125,160,0.1);
+    }
+
+    .btn-primary {
+      background: #2c7da0;
+      border: none;
+      padding: 0.7rem 1.2rem;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      color: white;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .btn-primary:hover {
+      background: #1f6280;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.05);
+    }
+
+    /* patient list table */
+    .patient-list {
+      padding: 0 1.5rem 1.5rem 1.5rem;
+    }
+
+    .table-wrapper {
+      max-height: 280px;
+      overflow-y: auto;
+      border-radius: 1rem;
+    }
+
+    .patient-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+
+    .patient-table th {
+      text-align: left;
+      padding: 0.7rem 0.3rem 0.5rem 0;
+      font-weight: 600;
+      color: #4b6e8c;
+      border-bottom: 1px solid #e2ebf3;
+    }
+
+    .patient-table td {
+      padding: 0.6rem 0.3rem 0.6rem 0;
+      border-bottom: 1px solid #eff3f8;
+      color: #1e3a5f;
+      font-weight: 500;
+    }
+
+    .patient-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .delete-btn {
+      background: none;
+      border: none;
+      color: #b9cfE4;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: 0.1s;
+    }
+    .delete-btn:hover {
+      color: #e06c6c;
+    }
+
+    .empty-message {
+      text-align: center;
+      padding: 2rem;
+      color: #8ca3bb;
+      font-size: 0.8rem;
+    }
+
+    /* stats row inside left panel */
+    .stats-mini {
+      display: flex;
+      gap: 1rem;
+      margin-top: 0.5rem;
+      padding: 0 1rem 1rem 1rem;
+    }
+    .stat-bubble {
+      background: #f8fafd;
+      border-radius: 1rem;
+      padding: 0.6rem 1rem;
+      flex: 1;
+      border: 1px solid #e2ebf3;
+    }
+    .stat-bubble .label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      color: #6f8db0;
+    }
+    .stat-bubble .number {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #1e3a5f;
+    }
+
+    @media (max-width: 1000px) {
+      body { padding: 1rem; }
+      .dashboard-grid { grid-template-columns: 1fr; gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="dashboard-grid">
+  <!-- LEFT COLUMN: existing dashboard (oncology predictions + insights) -->
+  <div class="left-panel">
+    <!-- Oncology admissions chart card -->
+    <div class="card">
+      <div class="card-header">
+        <h2><i class="fas fa-chart-line"></i> Predicted Oncology Admissions</h2>
+        <div class="badge-subtle">AI forecast · live</div>
+      </div>
+      <div class="chart-container">
+        <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-bottom: 0.5rem; padding-right: 0.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.4rem;"><span style="width: 18px; height: 2px; background: #2c7da0; display: inline-block;"></span><span style="font-size: 0.7rem;">Historical</span></div>
+          <div style="display: flex; align-items: center; gap: 0.4rem;"><span style="width: 22px; height: 2px; background: repeating-linear-gradient(90deg, #2b95ce, #2b95ce 6px, transparent 6px, transparent 12px); display: inline-block;"></span><span style="font-size: 0.7rem;">Future predictions</span></div>
+        </div>
+        <canvas id="admissionsChart" width="800" height="320" style="width:100%; max-height: 320px;"></canvas>
+      </div>
+      <div class="stats-mini">
+        <div class="stat-bubble"><div class="label">Current occupancy</div><div class="number">87%</div></div>
+        <div class="stat-bubble"><div class="label">Forecasted Δ (next 30d)</div><div class="number">+12.4%</div></div>
+        <div class="stat-bubble"><div class="label">AI confidence</div><div class="number">94.3%</div></div>
+      </div>
+    </div>
+    <!-- Additional insight card -->
+    <div class="card">
+      <div class="card-header">
+        <h2><i class="fas fa-microscope"></i> Clinical insights</h2>
+        <div class="badge-subtle">resource planning</div>
+      </div>
+      <div style="padding: 1rem 1.5rem 1.5rem 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+        <div><i class="fas fa-chart-simple" style="color:#2c7da0;"></i> <strong style="font-size:0.85rem;">Predicted peak:</strong> <span style="font-size:0.85rem;">Week 47 (Nov)</span></div>
+        <div><i class="fas fa-bed"></i> <strong style="font-size:0.85rem;">Required beds:</strong> <span style="font-size:0.85rem;">142 beds (+22 vs current)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT COLUMN: Patient Data Input + List -->
+  <div class="right-panel">
+    <!-- Input Form Card -->
+    <div class="card">
+      <div class="card-header">
+        <h2><i class="fas fa-user-plus"></i> Patient intake · oncology</h2>
+        <div class="badge-subtle">new admission</div>
+      </div>
+      <div class="patient-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Full name</label>
+            <input type="text" id="patientName" placeholder="e.g., Elena Vasquez" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label>Age</label>
+            <input type="number" id="patientAge" placeholder="Age" min="0" max="120">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Diagnosis / oncology type</label>
+            <select id="patientDiagnosis">
+              <option value="Breast Cancer">Breast Cancer</option>
+              <option value="Lung Cancer">Lung Cancer</option>
+              <option value="Colorectal Cancer">Colorectal Cancer</option>
+              <option value="Leukemia">Leukemia</option>
+              <option value="Lymphoma">Lymphoma</option>
+              <option value="Other solid tumor">Other solid tumor</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Admission priority</label>
+            <select id="patientPriority">
+              <option value="Routine">Routine</option>
+              <option value="Urgent">Urgent</option>
+              <option value="Emergency">Emergency</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Expected stay (days)</label>
+            <input type="number" id="patientStay" placeholder="Days" value="5">
+          </div>
+          <div class="form-group" style="display: flex; align-items: flex-end;">
+            <button class="btn-primary" id="addPatientBtn"><i class="fas fa-save"></i> Register patient</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Patient List Card -->
+    <div class="card">
+      <div class="card-header">
+        <h2><i class="fas fa-clipboard-list"></i> Active oncology registry</h2>
+        <div class="badge-subtle" id="patientCountBadge">0 patients</div>
+      </div>
+      <div class="patient-list">
+        <div class="table-wrapper">
+          <table class="patient-table" id="patientTable">
+            <thead>
+              <tr><th>Name</th><th>Age</th><th>Diagnosis</th><th>Priority</th><th>Stay</th><th></th></tr>
+            </thead>
+            <tbody id="patientTableBody">
+              <tr class="empty-row"><td colspan="6" class="empty-message">No patient records — add a new oncology admission</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top: 0.8rem; font-size: 0.7rem; color: #6b8eb3; text-align: right;">
+          <i class="fas fa-database"></i> Real-time registry · secure
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ------------------------------
+  // 1) ONCOLOGY PREDICTIONS CHART (same as before with dashed glowing future line)
+  // ------------------------------
+  const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan (F)', 'Feb (F)', 'Mar (F)'];
+  const historicalData = [84, 78, 92, 88, 95, 102, 108, 112, 118, 121, 127, 130, null, null, null];
+  const futureWithAnchor = [...Array(12).fill(null), 136, 144, 152];
+  futureWithAnchor[11] = 130;  // start prediction line from December
+
+  const ctx = document.getElementById('admissionsChart').getContext('2d');
+  
+  // Glow plugin for dashed prediction line
+  const glowPlugin = {
+    id: 'glowLine',
+    afterDatasetsDraw(chart) {
+      const { ctx } = chart;
+      const meta = chart.getDatasetMeta(1);
+      if (!meta || !meta.dataset) return;
+      ctx.save();
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = 'rgba(43, 149, 206, 0.55)';
+      ctx.strokeStyle = '#2b95ce';
+      ctx.lineWidth = 2.8;
+      const points = meta.dataset._children || [];
+      if (points.length > 1) {
+        ctx.beginPath();
+        let firstPoint = null;
+        for (let i = 0; i < points.length; i++) {
+          const point = points[i].getProps(['x', 'y'], true);
+          if (point.x && point.y && !isNaN(point.x) && !isNaN(point.y)) {
+            if (!firstPoint) {
+              ctx.moveTo(point.x, point.y);
+              firstPoint = point;
+            } else {
+              ctx.lineTo(point.x, point.y);
+            }
+          } else {
+            firstPoint = null;
+            ctx.beginPath();
+          }
+        }
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+  };
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Historical Admissions',
+          data: historicalData,
+          borderColor: '#2c7da0',
+          borderWidth: 2.4,
+          pointRadius: 3,
+          pointBackgroundColor: '#2c7da0',
+          pointBorderColor: '#ffffff',
+          tension: 0.2,
+          fill: false,
+        },
+        {
+          label: 'Future Predictions (AI)',
+          data: futureWithAnchor,
+          borderColor: '#2b95ce',
+          borderWidth: 2.6,
+          borderDash: [8, 6],
+          pointRadius: 4,
+          pointBackgroundColor: '#2b95ce',
+          pointBorderColor: '#ffffff',
+          tension: 0.2,
+          fill: false,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        tooltip: { mode: 'index', intersect: false, backgroundColor: '#ffffffdd', titleColor: '#1a3e5c', bodyColor: '#2c5a7a', borderColor: '#cbdde9', borderWidth: 1,
+          callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.raw} admissions` } },
+        legend: { display: false }
+      },
+      scales: {
+        y: { title: { display: true, text: 'Admissions', color: '#5c7292' }, grid: { color: '#e3eaf2' }, ticks: { stepSize: 20, callback: (v) => v + ' adm' }, min: 60, max: 170 },
+        x: { title: { display: true, text: 'Timeline — dashed segment = AI forecast', color: '#5c7292', font: { size: 10 } }, grid: { display: false } }
+      }
+    },
+    plugins: [glowPlugin]
+  });
+
+  // ------------------------------
+  // 2) PATIENT DATA MANAGEMENT (CRUD)
+  // ------------------------------
+  let patients = [];
+
+  // load from localStorage if any (persist demo)
+  function loadPatients() {
+    const stored = localStorage.getItem('oncology_patients');
+    if (stored) {
+      try {
+        patients = JSON.parse(stored);
+      } catch(e) { patients = []; }
+    } else {
+      // seed sample data for clean demonstration
+      patients = [
+        { id: Date.now()+1, name: 'James Carter', age: 64, diagnosis: 'Lung Cancer', priority: 'Urgent', stay: 8 },
+        { id: Date.now()+2, name: 'Maria Flores', age: 52, diagnosis: 'Breast Cancer', priority: 'Routine', stay: 5 }
+      ];
+    }
+    renderPatientTable();
+    updatePatientCounter();
+    persistPatients();
+  }
+
+  function persistPatients() {
+    localStorage.setItem('oncology_patients', JSON.stringify(patients));
+  }
+
+  function addPatient(patient) {
+    patients.unshift(patient); // newest on top
+    renderPatientTable();
+    updatePatientCounter();
+    persistPatients();
+  }
+
+  function deletePatient(id) {
+    patients = patients.filter(p => p.id !== id);
+    renderPatientTable();
+    updatePatientCounter();
+    persistPatients();
+  }
+
+  function renderPatientTable() {
+    const tbody = document.getElementById('patientTableBody');
+    if (!tbody) return;
+    if (patients.length === 0) {
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="6" class="empty-message">No patient records — add a new oncology admission</td></tr>`;
+      return;
+    }
+    let html = '';
+    patients.forEach(patient => {
+      html += `
+        <tr>
+          <td style="font-weight:600;">${escapeHtml(patient.name)}</td>
+          <td>${patient.age}</td>
+          <td>${escapeHtml(patient.diagnosis)}</td>
+          <td><span style="background:${getPriorityColor(patient.priority)}; padding:0.2rem 0.5rem; border-radius:40px; font-size:0.7rem; font-weight:500;">${patient.priority}</span></td>
+          <td>${patient.stay} days</td>
+          <td><button class="delete-btn" data-id="${patient.id}"><i class="fas fa-trash-alt"></i></button></td>
+        </tr>
+      `;
+    });
+    tbody.innerHTML = html;
+    // attach delete events
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = parseInt(btn.getAttribute('data-id'));
+        deletePatient(id);
+      });
+    });
+  }
+
+  function getPriorityColor(priority) {
+    if (priority === 'Emergency') return '#fee2e2';
+    if (priority === 'Urgent') return '#fff0db';
+    return '#e4f0fa';
+  }
+
+  function updatePatientCounter() {
+    const badge = document.getElementById('patientCountBadge');
+    if (badge) badge.innerText = `${patients.length} patient${patients.length !== 1 ? 's' : ''}`;
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
+    });
+  }
+
+  // handle form submission
+  document.getElementById('addPatientBtn').addEventListener('click', () => {
+    const nameInput = document.getElementById('patientName');
+    const ageInput = document.getElementById('patientAge');
+    const diagnosisSelect = document.getElementById('patientDiagnosis');
+    const prioritySelect = document.getElementById('patientPriority');
+    const stayInput = document.getElementById('patientStay');
+    
+    const name = nameInput.value.trim();
+    const age = parseInt(ageInput.value);
+    const diagnosis = diagnosisSelect.value;
+    const priority = prioritySelect.value;
+    const stay = parseInt(stayInput.value);
+    
+    if (!name) {
+      alert("Please enter patient's full name");
+      return;
+    }
+    if (isNaN(age) || age <= 0 || age > 120) {
+      alert("Please enter a valid age (1-120)");
+      return;
+    }
+    if (isNaN(stay) || stay <= 0 || stay > 120) {
+      alert("Expected stay must be a positive number");
+      return;
+    }
+    
+    const newPatient = {
+      id: Date.now(),
+      name: name,
+      age: age,
+      diagnosis: diagnosis,
+      priority: priority,
+      stay: stay
+    };
+    addPatient(newPatient);
+    // clear name and age fields only, but keep defaults for next input
+    nameInput.value = '';
+    ageInput.value = '';
+    // optional: reset priority to Routine, keep diagnosis as is, stay default 5
+    // but leave stay default = 5, priority stays whatever but we can reset to Routine for convenience
+    prioritySelect.value = 'Routine';
+    stayInput.value = '5';
+    nameInput.focus();
+    // subtle success feedback
+    const btn = document.getElementById('addPatientBtn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-check"></i> Registered';
+    setTimeout(() => { btn.innerHTML = originalText; }, 1200);
+  });
+
+  // initialize patients & storage
+  loadPatients();
+
+  // additional small detail: add demo patient if empty? already seeded.
+  // also style responsiveness: fine
+</script>
+</body>
+</html>

@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Oncology Command | Hospital Intelligence Suite</title>
+  <!-- Google Fonts Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #f0f4fa;
+      font-family: 'Inter', sans-serif;
+      color: #1a2c3e;
+    }
+
+    /* modern navigation bar */
+    .navbar {
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(110, 130, 160, 0.2);
+      padding: 0.8rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .logo-icon {
+      background: #1e6f9f;
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.2rem;
+    }
+    .logo-text {
+      font-weight: 700;
+      font-size: 1.2rem;
+      background: linear-gradient(135deg, #1f5e85, #2c7da0);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+    .nav-links {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .nav-btn {
+      background: transparent;
+      border: none;
+      padding: 0.5rem 1.2rem;
+      border-radius: 40px;
+      font-weight: 500;
+      font-size: 0.85rem;
+      font-family: 'Inter', sans-serif;
+      color: #4f6b8a;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .nav-btn i {
+      font-size: 0.9rem;
+    }
+    .nav-btn.active {
+      background: #eef2fc;
+      color: #1e6f9f;
+      font-weight: 600;
+      box-shadow: inset 0 0 0 1px rgba(44,125,160,0.2);
+    }
+    .nav-btn:hover:not(.active) {
+      background: #e9eff7;
+      color: #2c5f8a;
+    }
+
+    /* main container */
+    .page-container {
+      max-width: 1400px;
+      margin: 1.8rem auto;
+      padding: 0 1.5rem;
+    }
+
+    /* card style */
+    .card {
+      background: #ffffff;
+      border-radius: 1.5rem;
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.02), 0 1px 3px rgba(0,0,0,0.03);
+      border: 1px solid rgba(166, 188, 210, 0.35);
+      overflow: hidden;
+      margin-bottom: 1.8rem;
+    }
+    .card-header {
+      padding: 1.2rem 1.8rem 0.6rem 1.8rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #eef2f8;
+    }
+    .card-header h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #1f3a57;
+    }
+    .card-body {
+      padding: 1.5rem 1.8rem;
+    }
+
+    /* grids */
+    .grid-2col {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+    }
+    .grid-3col {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+    .stat-card {
+      background: #fafcff;
+      border-radius: 1.2rem;
+      padding: 1rem 1.2rem;
+      border: 1px solid #eef2fa;
+    }
+
+    /* form elements */
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: #5e7a9a;
+    }
+    input, select {
+      width: 100%;
+      padding: 0.7rem;
+      border-radius: 12px;
+      border: 1px solid #d9e2ef;
+      font-family: 'Inter', sans-serif;
+    }
+    .btn-primary {
+      background: #2c7da0;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 40px;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+    }
+    .patient-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .patient-table th, .patient-table td {
+      text-align: left;
+      padding: 0.7rem 0.2rem;
+      border-bottom: 1px solid #ecf3f9;
+    }
+    .delete-btn {
+      background: none;
+      border: none;
+      color: #b9cfe4;
+      cursor: pointer;
+    }
+    .badge {
+      background: #ecf5fb;
+      padding: 0.2rem 0.6rem;
+      border-radius: 50px;
+      font-size: 0.7rem;
+    }
+
+    @media (max-width: 800px) {
+      .grid-2col, .grid-3col { grid-template-columns: 1fr; }
+      .navbar { flex-direction: column; align-items: stretch; }
+      .nav-links { justify-content: center; }
+    }
+    .hidden-page { display: none; }
+    .active-page { display: block; }
+    hr { margin: 0.5rem 0; }
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="logo-area">
+    <div class="logo-icon"><i class="fas fa-hospital-user"></i></div>
+    <div class="logo-text">Oncology<span style="font-weight:400;">Command</span></div>
+  </div>
+  <div class="nav-links">
+    <button class="nav-btn" data-page="home"><i class="fas fa-home"></i> Home</button>
+    <button class="nav-btn" data-page="dashboard"><i class="fas fa-chart-pie"></i> Dashboard</button>
+    <button class="nav-btn" data-page="insights"><i class="fas fa-lightbulb"></i> Insights</button>
+    <button class="nav-btn" data-page="activity"><i class="fas fa-activity"></i> Activity</button>
+    <button class="nav-btn" data-page="about"><i class="fas fa-info-circle"></i> About</button>
+  </div>
+</nav>
+
+<div class="page-container">
+  <!-- HOME PAGE -->
+  <div id="home-page" class="page hidden-page">
+    <div class="card">
+      <div class="card-header"><h2><i class="fas fa-clinic-medical"></i> Oncology Command Center</h2><span class="badge">real-time hub</span></div>
+      <div class="card-body">
+        <p style="margin-bottom:1rem; color:#335c7e;">Welcome to the intelligent hospital management system — designed for oncology departments. Access predictive admissions, patient registry, AI-driven insights, and activity logs in one unified clinical workspace.</p>
+        <div class="grid-2col">
+          <div class="stat-card"><i class="fas fa-chart-line" style="color:#2c7da0;"></i> <strong>Predictive modeling</strong><br><span style="font-size:0.8rem;">AI forecast with 94% confidence</span></div>
+          <div class="stat-card"><i class="fas fa-database"></i> <strong>Patient data core</strong><br><span style="font-size:0.8rem;">Real-time oncology registry</span></div>
+          <div class="stat-card"><i class="fas fa-chart-simple"></i> <strong>Resource planning</strong><br><span style="font-size:0.8rem;">Bed & staffing recommendations</span></div>
+          <div class="stat-card"><i class="fas fa-shield-alt"></i> <strong>HIPAA ready</strong><br><span style="font-size:0.8rem;">Clinical data protection</span></div>
+        </div>
+        <div style="margin-top:1.5rem; background:#eef4fc; border-radius:1rem; padding:1rem;"><i class="fas fa-microphone-alt"></i> "Today's snapshot: occupancy 87% · predicted +12% next 30 days · proactive staffing advised."</div>
+      </div>
+    </div>
+    <div class="card"><div class="card-header"><h2>Quick actions</h2></div><div class="card-body"><button class="btn-primary" id="quickAddHint"><i class="fas fa-user-plus"></i> Register new patient (go to Activity)</button></div></div>
+  </div>
+
+  <!-- DASHBOARD PAGE: main predictions + metrics -->
+  <div id="dashboard-page" class="page hidden-page">
+    <div class="card">
+      <div class="card-header"><h2><i class="fas fa-chart-line"></i> Predicted Oncology Admissions</h2><div><span class="badge">historical vs forecast</span></div></div>
+      <div class="card-body">
+        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-bottom: 1rem;"><span style="display:flex; align-items:center; gap:6px;"><span style="width:18px; height:2px; background:#2c7da0;"></span> Actual</span><span style="display:flex; align-items:center; gap:6px;"><span style="width:22px; height:2px; background:repeating-linear-gradient(90deg,#2b95ce,#2b95ce 6px,transparent 6px,transparent 12px);"></span> AI Prediction</span></div>
+        <canvas id="admissionsChartMain" width="800" height="320" style="width:100%; max-height:340px;"></canvas>
+      </div>
+    </div>
+    <div class="grid-2col">
+      <div class="card"><div class="card-header"><h2>Capacity indicators</h2></div><div class="card-body"><div class="stat-card">Current occupancy: <strong>87%</strong><br>Projected peak: Week 47 (Nov)<br>Required beds (forecast): <strong>142</strong> (+22 vs current)</div></div></div>
+      <div class="card"><div class="card-header"><h2>AI forecast confidence</h2></div><div class="card-body"><div class="stat-card">Confidence interval: 94.3%<br>Margin error: ±3.1%<br>Next month trend: <span style="color:#2c9e6e;">+12.4%</span></div></div></div>
+    </div>
+  </div>
+
+  <!-- INSIGHTS PAGE: deeper analytics & clinical intelligence -->
+  <div id="insights-page" class="page hidden-page">
+    <div class="grid-2col">
+      <div class="card"><div class="card-header"><h2><i class="fas fa-chart-column"></i> Diagnosis distribution</h2></div><div class="card-body"><canvas id="diagnosisChart" width="400" height="200" style="max-height:200px;"></canvas><div class="badge" style="margin-top:0.8rem;">Top: Breast & Lung Oncology</div></div></div>
+      <div class="card"><div class="card-header"><h2><i class="fas fa-clock"></i> Admission trends by priority</h2></div><div class="card-body"><canvas id="priorityChart" width="400" height="200" style="max-height:200px;"></canvas></div></div>
+    </div>
+    <div class="card"><div class="card-header"><h2><i class="fas fa-brain"></i> Strategic insight engine</h2></div><div class="card-body"><p><i class="fas fa-chart-line"></i> Based on historical patterns, November shows the highest predicted demand (+18% YoY). AI recommends increasing bed capacity by 15% and implementing weekend surge protocols. Early discharge planning could reduce length of stay by 1.2 days on average.</p><hr><span class="badge">Updated hourly with real-time data</span></div></div>
+  </div>
+
+  <!-- ACTIVITY PAGE: patient input + live registry (CRUD) -->
+  <div id="activity-page" class="page hidden-page">
+    <div class="grid-2col">
+      <div class="card">
+        <div class="card-header"><h2><i class="fas fa-user-md"></i> New oncology intake</h2></div>
+        <div class="card-body">
+          <div class="form-group"><label>Full name</label><input type="text" id="actName" placeholder="e.g., Sarah Chen"></div>
+          <div class="form-group"><label>Age</label><input type="number" id="actAge" placeholder="Age"></div>
+          <div class="form-group"><label>Diagnosis</label><select id="actDiagnosis"><option>Breast Cancer</option><option>Lung Cancer</option><option>Colorectal Cancer</option><option>Leukemia</option><option>Lymphoma</option></select></div>
+          <div class="form-group"><label>Priority</label><select id="actPriority"><option>Routine</option><option>Urgent</option><option>Emergency</option></select></div>
+          <div class="form-group"><label>Expected stay (days)</label><input type="number" id="actStay" value="6"></div>
+          <button class="btn-primary" id="activityAddBtn"><i class="fas fa-save"></i> Register patient</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h2><i class="fas fa-list-ul"></i> Active oncology registry</h2><span id="patientCountAct" class="badge">0 patients</span></div>
+        <div class="card-body" style="max-height: 380px; overflow-y: auto;">
+          <table class="patient-table" id="activityTable">
+            <thead><tr><th>Name</th><th>Age</th><th>Diagnosis</th><th>Priority</th><th>Stay</th><th></th></tr></thead>
+            <tbody id="activityTableBody"><tr><td colspan="6" class="badge" style="text-align:center;">No entries — add your first patient</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="card"><div class="card-header"><h2><i class="fas fa-history"></i> Recent admission log</h2></div><div class="card-body"><div id="recentLogMsg" style="font-size:0.8rem;">Live updates from patient registry will appear here.</div></div></div>
+  </div>
+
+  <!-- ABOUT PAGE -->
+  <div id="about-page" class="page hidden-page">
+    <div class="card"><div class="card-header"><h2><i class="fas fa-hospital"></i> About Oncology Command</h2></div><div class="card-body"><p>Version 2.0 · AI-driven hospital management suite. Combines predictive analytics, patient data management, and clinical insights to streamline oncology workflows. Built with modern data visualization, secure local storage, and responsive design.</p><br><p><i class="fas fa-chart-line"></i> <strong>Prediction model:</strong> Gradient boosting + time series (historical admissions 2019–2025).</p><p><i class="fas fa-shield"></i> All patient data stored locally, anonymized for demo.</p><p>© 2026 Oncology Command — Intelligent healthcare</p></div></div>
+  </div>
+</div>
+
+<script>
+  // ----- shared patient storage (global for activity page) -----
+  let globalPatients = [];
+  
+  function loadPatientsFromStorage() {
+    const stored = localStorage.getItem('oncology_patients_multi');
+    if (stored) {
+      try { globalPatients = JSON.parse(stored); } catch(e) { globalPatients = []; }
+    } else {
+      globalPatients = [
+        { id: Date.now()+101, name: 'Eleanor Hughes', age: 58, diagnosis: 'Breast Cancer', priority: 'Urgent', stay: 7 },
+        { id: Date.now()+102, name: 'Victor Ramos', age: 71, diagnosis: 'Lung Cancer', priority: 'Routine', stay: 9 }
+      ];
+    }
+    renderActivityTable();
+    updatePatientCounterActivity();
+    persistPatients();
+  }
+  
+  function persistPatients() {
+    localStorage.setItem('oncology_patients_multi', JSON.stringify(globalPatients));
+  }
+  
+  function addGlobalPatient(patient) {
+    globalPatients.unshift(patient);
+    renderActivityTable();
+    updatePatientCounterActivity();
+    persistPatients();
+    updateRecentLog(`${patient.name} admitted (${patient.priority})`);
+  }
+  
+  function deleteGlobalPatient(id) {
+    globalPatients = globalPatients.filter(p => p.id !== id);
+    renderActivityTable();
+    updatePatientCounterActivity();
+    persistPatients();
+    updateRecentLog(`Patient record removed.`);
+  }
+  
+  function renderActivityTable() {
+    const tbody = document.getElementById('activityTableBody');
+    if (!tbody) return;
+    if (globalPatients.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:1rem;">No patient records — add a new oncology admission</td></tr>';
+      return;
+    }
+    let html = '';
+    globalPatients.forEach(p => {
+      html += `<tr>
+        <td style="font-weight:500;">${escapeHtml(p.name)}</td>
+        <td>${p.age}</td>
+        <td>${escapeHtml(p.diagnosis)}</td>
+        <td><span style="background:${getPriorityBg(p.priority)}; padding:0.2rem 0.6rem; border-radius:40px;">${p.priority}</span></td>
+        <td>${p.stay} d</td>
+        <td><button class="delete-btn" data-id="${p.id}"><i class="fas fa-trash-alt"></i></button></td>
+      </tr>`;
+    });
+    tbody.innerHTML = html;
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = parseInt(btn.getAttribute('data-id'));
+        deleteGlobalPatient(id);
+      });
+    });
+  }
+  
+  function updatePatientCounterActivity() {
+    const badge = document.getElementById('patientCountAct');
+    if (badge) badge.innerText = `${globalPatients.length} patient${globalPatients.length !== 1 ? 's' : ''}`;
+  }
+  
+  function getPriorityBg(priority) {
+    if (priority === 'Emergency') return '#ffe6e6';
+    if (priority === 'Urgent') return '#fff0db';
+    return '#e6f2fa';
+  }
+  
+  function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+  
+  function updateRecentLog(msg) {
+    const logDiv = document.getElementById('recentLogMsg');
+    if(logDiv) {
+      const time = new Date().toLocaleTimeString();
+      logDiv.innerHTML = `<i class="fas fa-clock"></i> ${time}: ${msg}<br>${logDiv.innerHTML.substring(0, 200)}`;
+    }
+  }
+  
+  // ----- CHART INITIALIZATION (Dashboard line chart) -----
+  const labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan (F)','Feb (F)','Mar (F)'];
+  const historicalData = [84,78,92,88,95,102,108,112,118,121,127,130,null,null,null];
+  const futureWithAnchor = [...Array(12).fill(null), 136,144,152];
+  futureWithAnchor[11] = 130;
+  
+  const ctxMain = document.getElementById('admissionsChartMain').getContext('2d');
+  const glowPlugin = {
+    id: 'glowLine',
+    afterDatasetsDraw(chart) {
+      const meta = chart.getDatasetMeta(1);
+      if (!meta || !meta.dataset) return;
+      const ctx = chart.ctx;
+      ctx.save();
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = 'rgba(43, 149, 206, 0.55)';
+      ctx.strokeStyle = '#2b95ce';
+      ctx.lineWidth = 2.8;
+      const points = meta.dataset._children || [];
+      if (points.length > 1) {
+        ctx.beginPath();
+        let first = null;
+        for (let i=0; i<points.length; i++) {
+          const p = points[i].getProps(['x','y'], true);
+          if (p.x && p.y && !isNaN(p.x) && !isNaN(p.y)) {
+            if (!first) { ctx.moveTo(p.x, p.y); first = p; }
+            else { ctx.lineTo(p.x, p.y); }
+          } else { first = null; ctx.beginPath(); }
+        }
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+  };
+  new Chart(ctxMain, {
+    type: 'line', data: { labels, datasets: [
+      { label:'Historical', data: historicalData, borderColor:'#2c7da0', borderWidth:2.4, pointRadius:3, pointBackgroundColor:'#2c7da0', tension:0.2, fill:false },
+      { label:'Future Predictions', data: futureWithAnchor, borderColor:'#2b95ce', borderWidth:2.6, borderDash:[8,6], pointRadius:4, pointBackgroundColor:'#2b95ce', tension:0.2, fill:false }
+    ]}, options: { responsive: true, maintainAspectRatio: true, plugins: { tooltip: { mode:'index' }, legend:{display:false} }, scales: { y: { title:{display:true, text:'Admissions'}, min:60, max:170 } } }, plugins: [glowPlugin]
+  });
+  
+  // INSIGHTS CHARTS (diagnosis distribution based on patient data + fallback)
+  function updateInsightsCharts() {
+    const diagCount = { 'Breast Cancer':0, 'Lung Cancer':0, 'Colorectal Cancer':0, 'Leukemia':0, 'Lymphoma':0, 'Other':0 };
+    const priorityCount = { 'Routine':0, 'Urgent':0, 'Emergency':0 };
+    globalPatients.forEach(p => {
+      let d = p.diagnosis;
+      if (diagCount[d] !== undefined) diagCount[d]++; else diagCount['Other']++;
+      if (priorityCount[p.priority] !== undefined) priorityCount[p.priority]++; else priorityCount['Routine']++;
+    });
+    if (Object.values(diagCount).every(v=>v===0)) { diagCount['Breast Cancer']=2; diagCount['Lung Cancer']=1; priorityCount['Routine']=2; priorityCount['Urgent']=1; }
+    const diagCtx = document.getElementById('diagnosisChart')?.getContext('2d');
+    const priorityCtx = document.getElementById('priorityChart')?.getContext('2d');
+    if (diagCtx) new Chart(diagCtx, { type:'bar', data:{ labels:Object.keys(diagCount), datasets:[{ label:'Patients', data:Object.values(diagCount), backgroundColor:'#2c7da0', borderRadius:8 }] }, options:{ responsive:true, maintainAspectRatio:true, plugins:{ legend:{display:false} } } });
+    if (priorityCtx) new Chart(priorityCtx, { type:'doughnut', data:{ labels:Object.keys(priorityCount), datasets:[{ data:Object.values(priorityCount), backgroundColor:['#2c7da0','#3f9ec9','#f4a261'] }] }, options:{ responsive:true, plugins:{ legend:{ position:'bottom' } } } });
+  }
+  
+  // ----- PAGE NAVIGATION LOGIC -----
+  const pages = ['home', 'dashboard', 'insights', 'activity', 'about'];
+  function showPage(pageId) {
+    pages.forEach(p => {
+      const el = document.getElementById(`${p}-page`);
+      if (el) el.classList.add('hidden-page');
+    });
+    const activePage = document.getElementById(`${pageId}-page`);
+    if (activePage) activePage.classList.remove('hidden-page');
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      if (btn.getAttribute('data-page') === pageId) btn.classList.add('active');
+      else btn.classList.remove('active');
+    });
+    if (pageId === 'insights') setTimeout(() => updateInsightsCharts(), 80);
+    if (pageId === 'activity') { renderActivityTable(); updatePatientCounterActivity(); }
+  }
+  
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const page = btn.getAttribute('data-page');
+      if (page) showPage(page);
+    });
+  });
+  
+  // Activity page add patient logic
+  document.getElementById('activityAddBtn')?.addEventListener('click', () => {
+    const name = document.getElementById('actName')?.value.trim();
+    const age = parseInt(document.getElementById('actAge')?.value);
+    const diagnosis = document.getElementById('actDiagnosis')?.value;
+    const priority = document.getElementById('actPriority')?.value;
+    const stay = parseInt(document.getElementById('actStay')?.value);
+    if (!name || isNaN(age) || age<1 || isNaN(stay) || stay<1) { alert("Please fill valid name, age (>0) and stay days"); return; }
+    addGlobalPatient({ id: Date.now(), name, age, diagnosis, priority, stay });
+    document.getElementById('actName').value = ''; document.getElementById('actAge').value = '';
+    document.getElementById('actStay').value = '6';
+  });
+  
+  document.getElementById('quickAddHint')?.addEventListener('click', () => showPage('activity'));
+  
+  loadPatientsFromStorage();
+  showPage('home');
+  // ensure insights charts after data load
+  setTimeout(() => { if(document.getElementById('insights-page') && !document.getElementById('insights-page').classList.contains('hidden-page')) updateInsightsCharts(); }, 200);
+</script>
+</body>
+</html>
